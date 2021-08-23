@@ -13,7 +13,6 @@ import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 class App extends Component {
   state = {
     searchQuery: "",
-    firtsLoading: false,
     loading: false,
     images: [],
     page: 1,
@@ -27,46 +26,40 @@ class App extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.searchQuery !== this.state.searchQuery) {
-      this.setState({ firstLoading: true, showButton: false });
-      imagesAPI
-        .fetchImages(this.state.searchQuery, this.state.page)
-        .then((response) => response.json())
-        .then(({ hits }) => {
-          if (hits.length === 0) {
-            return toast.info("Enter another query");
-          }
-          if (hits.length === 12) {
-            this.setState({ showButton: true });
-          }
-          this.setState({ images: [...hits] });
-        })
-        .catch((error) => this.setState({ error }))
-        .finally(() => this.setState({ firstLoading: false }));
-    }
+    const isSearchQueryChanged =
+      prevState.searchQuery !== this.state.searchQuery;
+    const isPageChanged = prevState.page !== this.state.page;
 
-    if (prevState.page !== this.state.page && this.state.page !== 1) {
-      this.setState({ loading: true });
+    if (isSearchQueryChanged || isPageChanged) {
+      this.setState({ loading: true, showButton: false });
+
       imagesAPI
         .fetchImages(this.state.searchQuery, this.state.page)
         .then((response) => response.json())
         .then(({ hits }) => {
           if (hits.length === 0) {
-            return toast.info("There ara no more images, enter new query");
+            if (isSearchQueryChanged) {
+              return toast.info("Enter another query");
+            } else {
+              return toast.info("There ara no more images, enter new query");
+            }
           }
+
           if (hits.length === 12) {
             this.setState({ showButton: true });
           } else {
             this.setState({ showButton: false });
           }
+
           this.setState(({ images }) => {
             return { images: [...images, ...hits] };
           });
-          this.smoothScroll();
+
+          if (isPageChanged) {
+            this.smoothScroll();
+          }
         })
-        .catch((error) => {
-          this.setState({ error });
-        })
+        .catch((error) => this.setState({ error }))
         .finally(() => this.setState({ loading: false }));
     }
   }
@@ -96,29 +89,31 @@ class App extends Component {
   };
 
   render() {
+    const { error, images, loading, showButton, openModal, modalData } =
+      this.state;
+
     return (
       <>
         <SearchBar onSubmit={this.handleFormSubmit} />
-        {this.state.error && <p>{this.state.error.message}</p>}
-        <ImageGallery images={this.state.images} openModal={this.openModal} />
-        {this.state.firstLoading && (
+
+        {error && <p>{error.message}</p>}
+
+        <ImageGallery images={images} openModal={this.openModal} />
+
+        {loading && (
           <LoaderContainer>
             <Loader type="ThreeDots" color="#00BFFF" height={80} width={80} />
           </LoaderContainer>
         )}
 
-        {this.state.loading && (
-          <LoaderContainer>
-            <Loader type="ThreeDots" color="#00BFFF" height={80} width={80} />
-          </LoaderContainer>
-        )}
-        {this.state.showButton && !this.state.loading && (
+        {showButton && !loading && (
           <Button text="Load more" onClick={this.handleLoadMoreButton} />
         )}
-        {this.state.openModal && (
+
+        {openModal && (
           <Modal
-            url={this.state.modalData.url}
-            desc={this.state.modalData.desc}
+            url={modalData.url}
+            desc={modalData.desc}
             closeModal={this.closeModal}
           />
         )}

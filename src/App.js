@@ -55,7 +55,7 @@ class App extends Component {
             return { images: [...images, ...hits] };
           });
 
-          if (isPageChanged) {
+          if (isPageChanged && this.state.page !== 1) {
             this.smoothScroll();
           }
         })

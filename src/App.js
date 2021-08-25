@@ -89,8 +89,15 @@ class App extends Component {
   };
 
   render() {
-    const { error, images, loading, showButton, openModal, modalData } =
-      this.state;
+    const {
+      error,
+      images,
+      loading,
+      showButton,
+      openModal,
+      modalData: { url },
+      modalData: { desc },
+    } = this.state;
 
     return (
       <>
@@ -111,11 +118,7 @@ class App extends Component {
         )}
 
         {openModal && (
-          <Modal
-            url={modalData.url}
-            desc={modalData.desc}
-            closeModal={this.closeModal}
-          />
+          <Modal url={url} desc={desc} closeModal={this.closeModal} />
         )}
 
         <ToastContainer autoClose={3000} />
